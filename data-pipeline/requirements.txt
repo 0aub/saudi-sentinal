@@ -1,0 +1,19 @@
+# Implementation guide: see docs/LEVEL-0-DATA-PIPELINE.md — "Dependencies" section
+# Exact versions from plan doc — pin for reproducibility.
+
+sentinelhub>=3.10
+rasterio>=1.3
+shapely>=2.0
+geopandas>=0.14
+psycopg2-binary>=2.9
+sqlalchemy>=2.0
+geoalchemy2>=0.14
+minio>=7.2
+fastapi>=0.109
+uvicorn>=0.27
+redis>=5.0
+pyyaml>=6.0
+click>=8.1
+httpx>=0.27
+pydantic>=2.5
+numpy>=1.26

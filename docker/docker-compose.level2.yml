@@ -1,0 +1,117 @@
+# Implementation guide: see docs/plans/LEVEL-2-MLOPS.md — "Docker Configuration"
+# Level 2 MLOps: Airflow (webserver + scheduler), MLflow, Model Server, Prometheus, Grafana
+# Inherits Level 0 services (postgres, minio, redis).
+# Verbatim from plan doc (docker-compose.level2.yml).
+
+version: '3.8'
+
+services:
+  # --- Inherit Level 0 services ---
+  # Run: docker compose -f docker-compose.level0.yml -f docker-compose.level2.yml up -d
+
+  airflow-webserver:
+    build:
+      context: ..
+      dockerfile: docker/mlops.Dockerfile
+    command: airflow webserver
+    ports:
+      - "8080:8080"
+    environment:
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql://airflow:${AIRFLOW_DB_PASSWORD}@postgres:5432/airflow
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW_SECRET_KEY}
+    volumes:
+      - ../mlops/dags:/opt/airflow/dags
+      - ../mlops/training:/opt/airflow/training
+      - ../shared:/opt/airflow/shared
+      - airflow_logs:/opt/airflow/logs
+    depends_on:
+      - postgres
+      - minio
+
+  airflow-scheduler:
+    build:
+      context: ..
+      dockerfile: docker/mlops.Dockerfile
+    command: airflow scheduler
+    environment:
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql://airflow:${AIRFLOW_DB_PASSWORD}@postgres:5432/airflow
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    volumes:
+      - ../mlops/dags:/opt/airflow/dags
+      - ../mlops/training:/opt/airflow/training
+      - ../shared:/opt/airflow/shared
+      - airflow_logs:/opt/airflow/logs
+    depends_on:
+      - postgres
+
+  mlflow:
+    build:
+      context: ..
+      dockerfile: docker/mlops.Dockerfile
+    command: >
+      mlflow server
+      --backend-store-uri postgresql://mlflow:${MLFLOW_DB_PASSWORD}@postgres:5432/mlflow
+      --default-artifact-root s3://mlflow-artifacts/
+      --host 0.0.0.0 --port 5000
+    ports:
+      - "5000:5000"
+    environment:
+      AWS_ACCESS_KEY_ID: ${MINIO_USER}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_PASSWORD}
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+    depends_on:
+      - postgres
+      - minio
+
+  model-server:
+    build:
+      context: ..
+      dockerfile: docker/mlops.Dockerfile
+    command: uvicorn mlops.serving.main:app --host 0.0.0.0 --port 8200
+    ports:
+      - "8200:8200"
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_USER}
+      MINIO_SECRET_KEY: ${MINIO_PASSWORD}
+      DATABASE_URL: postgresql://sentinel:${POSTGRES_PASSWORD}@postgres:5432/sentinel_catalog
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    depends_on:
+      - mlflow
+      - postgres
+      - minio
+
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    ports:
+      - "9090:9090"
+    volumes:
+      - ../system/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+
+  grafana:
+    image: grafana/grafana:10.2.0
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ../system/monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+
+volumes:
+  airflow_logs:
+  prometheus_data:
+  grafana_data:

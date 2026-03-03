@@ -1,0 +1,41 @@
+{
+  "__comment": "Implementation guide: see docs/LEVEL-2-MLOPS.md — Grafana dashboards section",
+  "__comment2": "This is a placeholder. Replace with exported Grafana dashboard JSON.",
+  "title": "Saudi Sentinel AI — Platform Overview",
+  "uid": "saudi-sentinel-overview",
+  "version": 1,
+  "panels": [
+    {
+      "title": "Tile API Request Rate",
+      "type": "graph",
+      "datasource": "Prometheus",
+      "targets": [
+        {"expr": "rate(http_requests_total{job='tile-api'}[5m])", "legendFormat": "req/s"}
+      ]
+    },
+    {
+      "title": "Model Server Latency p95",
+      "type": "gauge",
+      "datasource": "Prometheus",
+      "targets": [
+        {"expr": "histogram_quantile(0.95, rate(inference_duration_seconds_bucket[5m]))", "legendFormat": "p95 ms"}
+      ]
+    },
+    {
+      "title": "Chips Ingested per Day",
+      "type": "stat",
+      "datasource": "Prometheus",
+      "targets": [
+        {"expr": "increase(chips_ingested_total[24h])", "legendFormat": "chips/day"}
+      ]
+    },
+    {
+      "title": "Active Alerts by Severity",
+      "type": "piechart",
+      "datasource": "Prometheus",
+      "targets": [
+        {"expr": "alerts_active_total", "legendFormat": "{{severity}}"}
+      ]
+    }
+  ]
+}

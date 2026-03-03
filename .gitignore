@@ -1,0 +1,81 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.so
+*.dylib
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*.ipynb_checkpoint
+
+# Environment / credentials — NEVER COMMIT
+# Only .env.example is safe to commit (contains no real secrets)
+.env
+.env.*
+!.env.example
+docker/.env
+*.pem
+*.key
+secrets/
+
+# Docker volumes (local mounts)
+pgdata/
+miniodata/
+
+# MLflow artifacts (stored in MinIO, not git)
+mlruns/
+mlartifacts/
+
+# Large binary files
+*.tif
+*.geotiff
+*.jp2
+*.nc
+*.h5
+*.hdf5
+*.onnx
+*.pkl
+*.pt
+*.pth
+
+# Node.js / React
+node_modules/
+system/frontend/dist/
+system/frontend/.cache/
+system/frontend/build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.DS_Store
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+
+# Airflow
+airflow.db
+airflow.cfg
+unittests.cfg
+logs/
+
+# OS
+Thumbs.db

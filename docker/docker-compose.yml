@@ -1,0 +1,19 @@
+# Implementation guide: see docs/plans/README.md — "Folder Structure"
+# Full stack compose — imports all three level compose files.
+# Starts ALL services: Level 0 + Level 2 + Level 3.
+#
+# Usage:
+#   cp .env.example .env   # Fill in all credentials
+#   docker compose up -d
+#
+# Individual levels (recommended during development):
+#   docker compose -f docker-compose.level0.yml up -d
+#   docker compose -f docker-compose.level0.yml -f docker-compose.level2.yml up -d
+#   docker compose -f docker-compose.level0.yml -f docker-compose.level2.yml -f docker-compose.level3.yml up -d
+
+version: '3.8'
+
+include:
+  - docker-compose.level0.yml
+  - docker-compose.level2.yml
+  - docker-compose.level3.yml

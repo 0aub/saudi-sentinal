@@ -1,0 +1,92 @@
+# Implementation guide: see docs/plans/LEVEL-0-DATA-PIPELINE.md — "Configuration → aois.yaml" section
+# All Saudi AOIs for the Saudi Sentinel AI platform.
+# Each AOI is used by one or more of the 9 analysis projects.
+
+aois:
+  riyadh-metro:
+    center: [24.7136, 46.6753]     # [lat, lon]
+    size_km: [80, 80]
+    sensors: [s2]
+    fetch_frequency_days: 5        # Sentinel-2 revisit cycle
+    max_cloud_pct: 20
+    projects: [urban-sprawl, green-riyadh]
+
+  jeddah-metro:
+    center: [21.4858, 39.1925]
+    size_km: [50, 50]
+    sensors: [s2]
+    fetch_frequency_days: 5
+    max_cloud_pct: 20
+    projects: [urban-sprawl]
+
+  dammam-metro:
+    center: [26.3927, 49.9777]
+    size_km: [40, 40]
+    sensors: [s2]
+    fetch_frequency_days: 5
+    max_cloud_pct: 20
+    projects: [urban-sprawl]
+
+  aljouf-farms:
+    center: [29.8, 40.1]
+    size_km: [100, 100]
+    sensors: [s2]
+    fetch_frequency_days: 5
+    max_cloud_pct: 15
+    projects: [crop-mapping, groundwater]
+
+  tabuk-farms:
+    center: [28.3, 36.5]
+    size_km: [80, 80]
+    sensors: [s2]
+    fetch_frequency_days: 5
+    max_cloud_pct: 15
+    projects: [crop-mapping, neom-tracker]
+
+  hail-farms:
+    center: [27.5, 41.7]
+    size_km: [80, 80]
+    sensors: [s2]
+    fetch_frequency_days: 5
+    max_cloud_pct: 15
+    projects: [crop-mapping, groundwater]
+
+  neom-line:
+    center: [28.0, 35.2]
+    size_km: [170, 20]             # 170 km strip along The Line corridor
+    sensors: [s1, s2]
+    fetch_frequency_days: 5
+    max_cloud_pct: 20
+    projects: [neom-tracker]
+
+  rub-al-khali-north:
+    center: [21.0, 49.0]
+    size_km: [200, 200]
+    sensors: [s1]                  # SAR preferred for dune morphology
+    fetch_frequency_days: 12       # S1 revisit
+    max_cloud_pct: null            # SAR is cloud-independent
+    projects: [dune-migration]
+
+  arabian-gulf-coast:
+    center: [26.5, 50.5]
+    size_km: [300, 80]             # ~300 km of Saudi Gulf coastline
+    sensors: [s1]                  # SAR for oil spill dark patches
+    fetch_frequency_days: 6
+    max_cloud_pct: null
+    projects: [oil-spill]
+
+  jeddah-wadis:
+    center: [21.5, 39.5]
+    size_km: [60, 60]
+    sensors: [s1]                  # SAR for post-flood wet soil detection
+    fetch_frequency_days: 6
+    max_cloud_pct: null
+    projects: [flash-flood]
+
+  qassim-agri-edge:
+    center: [26.3, 43.8]
+    size_km: [100, 100]
+    sensors: [s1, s2]              # SAR + optical fusion for desertification
+    fetch_frequency_days: 5
+    max_cloud_pct: 20
+    projects: [desertification]
