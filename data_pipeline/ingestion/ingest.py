@@ -3,10 +3,10 @@
 CLI entry point for historical backfill and scheduled ingestion.
 
 Usage:
-    python data-pipeline/ingest.py --aoi riyadh-metro --sensor s2 \
+    python data_pipeline/ingest.py --aoi riyadh-metro --sensor s2 \
         --start 2019-01-01 --end 2024-12-31
 
-    python data-pipeline/ingest.py --aoi arabian-gulf-coast --sensor s1 \
+    python data_pipeline/ingest.py --aoi arabian-gulf-coast --sensor s1 \
         --start 2019-01-01 --end 2024-12-31 --max-cloud 100
 
 This script:
@@ -35,7 +35,7 @@ import click
 @click.option("--max-cloud", default=20, show_default=True, help="Max cloud % (S2 only)")
 @click.option(
     "--config",
-    default="data-pipeline/config/aois.yaml",
+    default="data_pipeline/config/aois.yaml",
     show_default=True,
     help="Path to aois.yaml",
 )

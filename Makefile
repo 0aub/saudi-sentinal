@@ -1,11 +1,13 @@
 # Saudi Sentinel — Makefile
+# Convenience wrapper around docker compose commands.
 # Usage: make <target>
 # See README.md for full developer guide.
 
-.PHONY: help setup level0-up level0-down level2-up level2-down level3-up level3-down \
+.PHONY: help level0-up level0-down level2-up level2-down level3-up level3-down \
         all-up all-down seed-aois notebooks test lint clean
 
 ENV_FILE := .env
+DC_LEVEL0 := docker compose -f docker/docker-compose.level0.yml --env-file $(ENV_FILE)
 
 # Guard: abort early if .env doesn't exist
 check-env:
@@ -15,7 +17,6 @@ help:
 	@echo ""
 	@echo "Saudi Sentinel — Make targets"
 	@echo "================================="
-	@echo "  setup          Install Python dev dependencies"
 	@echo "  level0-up      Start Level 0 (PostGIS, MinIO, Redis, Tile API)"
 	@echo "  level0-down    Stop Level 0 services"
 	@echo "  level2-up      Start Level 2 (Airflow, MLflow, Model Server, Grafana)"
@@ -26,20 +27,16 @@ help:
 	@echo "  all-down       Stop all services"
 	@echo "  seed-aois      Seed AOI definitions into PostGIS catalog"
 	@echo "  notebooks      Start JupyterLab on port 8888"
-	@echo "  test           Run test suite"
-	@echo "  lint           Run ruff linter"
+	@echo "  test           Run test suite (in Docker)"
+	@echo "  lint           Run ruff linter (in Docker)"
 	@echo "  clean          Remove Python cache files"
 	@echo ""
-
-setup:
-	pip install -e ".[dev]"
-	@echo "Dev environment ready."
 
 # --- Level 0 ---
 
 level0-up: check-env
 	@echo "Starting Level 0 (PostGIS, MinIO, Redis, Tile API)..."
-	docker compose -f docker/docker-compose.level0.yml --env-file $(ENV_FILE) up -d
+	$(DC_LEVEL0) up -d
 	@echo ""
 	@echo "  Tile API:      http://localhost:8100"
 	@echo "  MinIO Console: http://localhost:9001  (credentials in .env)"
@@ -48,8 +45,8 @@ level0-up: check-env
 level0-down:
 	docker compose -f docker/docker-compose.level0.yml down
 
-seed-aois:
-	python data-pipeline/seed_aois.py --config data-pipeline/config/aois.yaml
+seed-aois: check-env
+	$(DC_LEVEL0) exec tile-api python /app/data_pipeline/seed_aois.py --config /app/data_pipeline/config/aois.yaml
 
 # --- Level 2 ---
 
@@ -109,13 +106,21 @@ notebooks:
 		-v $(PWD)/shared:/app/shared \
 		saudi-sentinel-notebooks
 
-# --- Development ---
+# --- Development (all run in Docker, no local Python needed) ---
 
 test:
-	pytest tests/ -v --tb=short
+	docker build -f docker/data_pipeline.Dockerfile -t saudi-sentinel-test .
+	docker run --rm \
+		-v $(PWD)/tests:/app/tests \
+		saudi-sentinel-test \
+		sh -c "pip install -q pytest pytest-asyncio pytest-cov && pytest tests/ -v --tb=short"
 
 lint:
-	ruff check shared/ data-pipeline/ mlops/ system/ tests/
+	docker run --rm \
+		-v $(PWD):/src \
+		-w /src \
+		python:3.11-slim \
+		sh -c "pip install -q ruff && ruff check shared/ data_pipeline/ mlops/ system/ tests/"
 
 clean:
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true

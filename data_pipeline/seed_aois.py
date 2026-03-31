@@ -3,7 +3,7 @@
 AOI seeding script — loads aois.yaml and inserts all AOIs into PostGIS catalog.
 
 Usage:
-    python data-pipeline/seed_aois.py --config data-pipeline/config/aois.yaml
+    python data_pipeline/seed_aois.py --config data_pipeline/config/aois.yaml
 
 This is a one-time setup step run before any data ingestion.
 After seeding, AOIs are queryable via the Tile API at /api/v1/aois.
@@ -40,7 +40,7 @@ def bbox_from_center_and_size(lat: float, lon: float, size_km: list) -> dict:
 @click.command()
 @click.option(
     "--config",
-    default="data-pipeline/config/aois.yaml",
+    default="data_pipeline/config/aois.yaml",
     show_default=True,
     help="Path to aois.yaml",
 )

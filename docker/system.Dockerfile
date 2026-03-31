@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y \
 
 # Install system-level Python deps (superset of Level 0 + Level 2)
 COPY mlops/requirements.txt /tmp/mlops-req.txt
-COPY data-pipeline/requirements.txt /tmp/pipeline-req.txt
+COPY data_pipeline/requirements.txt /tmp/pipeline-req.txt
 RUN pip install --no-cache-dir \
     -r /tmp/mlops-req.txt \
     -r /tmp/pipeline-req.txt \
@@ -28,7 +28,7 @@ RUN pip install --no-cache-dir \
 COPY shared/ /app/shared/
 COPY system/ /app/system/
 COPY mlops/ /app/mlops/
-COPY data-pipeline/ /app/data-pipeline/
+COPY data_pipeline/ /app/data_pipeline/
 
 WORKDIR /app
 ENV PYTHONPATH=/app

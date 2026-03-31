@@ -20,8 +20,8 @@ services:
     environment:
       DATABASE_URL: postgresql://sentinel:${POSTGRES_PASSWORD}@postgres:5432/sentinel_catalog
       MINIO_ENDPOINT: minio:9000
-      MINIO_ACCESS_KEY: ${MINIO_USER}
-      MINIO_SECRET_KEY: ${MINIO_PASSWORD}
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
       MODEL_SERVER_URL: http://model-server:8200
       MLFLOW_TRACKING_URI: http://mlflow:5000
       AIRFLOW_API_URL: http://airflow-webserver:8080
@@ -38,13 +38,13 @@ services:
 
   frontend:
     build:
-      context: ../system/frontend
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: docker/frontend.Dockerfile
+      args:
+        VITE_API_URL: http://localhost:8300
+        VITE_MAPBOX_TOKEN: ${MAPBOX_TOKEN}
     ports:
       - "3001:80"
-    environment:
-      REACT_APP_API_URL: http://localhost:8300
-      REACT_APP_MAPBOX_TOKEN: ${MAPBOX_TOKEN}
     depends_on:
       - api-gateway
 
@@ -58,6 +58,8 @@ services:
       REDIS_URL: redis://redis:6379
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
       ALERT_EMAIL_FROM: ${ALERT_EMAIL_FROM}
       ALERT_EMAIL_TO: ${ALERT_EMAIL_TO}
     volumes:

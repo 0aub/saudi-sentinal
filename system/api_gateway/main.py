@@ -116,7 +116,7 @@ async def get_map_tile(project_id: str, z: int, x: int, y: int):
     XYZ raster tile server for prediction overlays.
 
     Implementation: tile_server.render_tile(project_id, z, x, y)
-    See: system/api-gateway/tile_server.py for rendering logic.
+    See: system/api_gateway/tile_server.py for rendering logic.
     See: docs/plans/LEVEL-3-SYSTEM.md — "Tile Server Implementation"
     """
     raise NotImplementedError("Implement: tile_server.render_tile(project_id, z, x, y)")

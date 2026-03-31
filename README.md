@@ -67,8 +67,8 @@ Install all of these before starting anything:
 | Requirement | Version | Notes |
 |-------------|---------|-------|
 | Docker Desktop / Docker Engine | 24+ | With Compose v2 (`docker compose`) |
-| Python | 3.11+ | Use pyenv or conda |
 | Git | any | |
+| Make | any | Optional — convenience wrapper for `docker compose` commands |
 | 30 GB free disk | — | Sentinel tiles are large |
 | CDSE Account | — | Free at [dataspace.copernicus.eu](https://dataspace.copernicus.eu) — needed for tile download |
 | Mapbox token | — | Free tier at [mapbox.com](https://mapbox.com) — needed only for Level 3 frontend |
@@ -84,20 +84,17 @@ docker run hello-world
 ## First-Time Setup
 
 ```bash
-# 1. Clone the repo
-git clone https://github.com/YOUR_ORG/saudi-sentinel.git
-cd saudi-sentinel
+# 1. Clone the repo and enter the directory
+git clone https://github.com/0aub/saudi-sentinal.git
+cd saudi-sentinal
 
-# 2. Copy the single environment file and fill in your credentials
+# 2. Copy the environment file and fill in your credentials
 cp .env.example .env
 # Open .env — fill in everything marked <CHANGE_ME>
 # Minimum required to start: CDSE_CLIENT_ID, CDSE_CLIENT_SECRET, all passwords
 # MAPBOX_TOKEN is only needed for Level 3 (frontend)
 
-# 3. Install Python dev dependencies (for linting, tests, local utils)
-pip install -e ".[dev]"
-
-# 4. Confirm everything loads
+# 3. Confirm everything loads
 make help
 ```
 
@@ -124,7 +121,7 @@ Level 0 is the foundation. Every other level reads data that Level 0 produces.
 make level0-up
 ```
 
-This copies `docker/.env.example` → `docker/.env` on first run, then launches all four services.
+Launches all four services. Credentials are read from `.env` in the project root.
 
 ### Seed the AOI definitions
 
@@ -165,11 +162,11 @@ docker compose -f docker/docker-compose.level0.yml logs -f tile-api
 
 | File | What it does |
 |------|-------------|
-| [data-pipeline/ingestion/cdse_client.py](data-pipeline/ingestion/cdse_client.py) | Downloads tiles from Copernicus |
-| [data-pipeline/ingestion/tile_processor.py](data-pipeline/ingestion/tile_processor.py) | Slices products into 256×256 chips |
-| [data-pipeline/catalog/tile_catalog.py](data-pipeline/catalog/tile_catalog.py) | PostGIS interface |
-| [data-pipeline/catalog/tile_store.py](data-pipeline/catalog/tile_store.py) | MinIO interface |
-| [data-pipeline/config/aois.yaml](data-pipeline/config/aois.yaml) | All 11 AOI definitions |
+| [data_pipeline/ingestion/cdse_client.py](data_pipeline/ingestion/cdse_client.py) | Downloads tiles from Copernicus |
+| [data_pipeline/ingestion/tile_processor.py](data_pipeline/ingestion/tile_processor.py) | Slices products into 256×256 chips |
+| [data_pipeline/catalog/tile_catalog.py](data_pipeline/catalog/tile_catalog.py) | PostGIS interface |
+| [data_pipeline/catalog/tile_store.py](data_pipeline/catalog/tile_store.py) | MinIO interface |
+| [data_pipeline/config/aois.yaml](data_pipeline/config/aois.yaml) | All 11 AOI definitions |
 | [docs/plans/LEVEL-0-DATA-PIPELINE.md](docs/plans/LEVEL-0-DATA-PIPELINE.md) | Full spec and schema |
 
 ### Stop it
@@ -371,8 +368,8 @@ Set `VITE_API_URL=http://localhost:8300` in `system/frontend/.env.local`.
 
 | File | What it does |
 |------|-------------|
-| [system/api-gateway/main.py](system/api-gateway/main.py) | Unified FastAPI gateway |
-| [system/api-gateway/tile_server.py](system/api-gateway/tile_server.py) | XYZ tile renderer |
+| [system/api_gateway/main.py](system/api_gateway/main.py) | Unified FastAPI gateway |
+| [system/api_gateway/tile_server.py](system/api_gateway/tile_server.py) | XYZ tile renderer |
 | [system/alerts/rules.py](system/alerts/rules.py) | Alert thresholds per project |
 | [system/alerts/worker.py](system/alerts/worker.py) | Alert evaluation loop |
 | [system/frontend/src/App.jsx](system/frontend/src/App.jsx) | React route structure |
@@ -428,8 +425,7 @@ If no chips exist yet, run an ingestion job first (see Level 0 above).
 ### Running tests
 
 ```bash
-make test                            # full suite
-pytest tests/test_shared/ -v        # shared utilities only
+make test                            # runs pytest in Docker
 ```
 
 ### Linting
@@ -478,7 +474,7 @@ make all-down
 
 ```
 saudi-sentinel/
-├── data-pipeline/          # Level 0 — ingestion, tiling, catalog, API
+├── data_pipeline/          # Level 0 — ingestion, tiling, catalog, API
 │   ├── ingestion/          # CDSE client + tile processor
 │   ├── tiling/             # 256×256 chip slicing
 │   ├── catalog/            # PostGIS + MinIO interfaces
@@ -505,7 +501,7 @@ saudi-sentinel/
 │   └── monitoring/         # PSI drift detection
 │
 ├── system/                 # Level 3 — full production system
-│   ├── api-gateway/        # Unified FastAPI + tile renderer
+│   ├── api_gateway/        # Unified FastAPI + tile renderer
 │   ├── alerts/             # Alert rules + worker
 │   ├── frontend/           # React 18 + Deck.gl + Mapbox
 │   └── monitoring/         # Prometheus + Grafana config
@@ -521,17 +517,18 @@ saudi-sentinel/
 │   ├── docker-compose.level2.yml
 │   ├── docker-compose.level3.yml
 │   ├── docker-compose.yml      # Full stack
-│   ├── data-pipeline.Dockerfile
+│   ├── data_pipeline.Dockerfile
 │   ├── mlops.Dockerfile
 │   ├── notebooks.Dockerfile
 │   ├── system.Dockerfile
-│   └── .env.example
+│   ├── frontend.Dockerfile
+│   └── init.sql                # PostGIS extension setup (auto-run by postgres on first boot)
 │
 ├── tests/                  # pytest suite
 ├── docs/plans/             # All original plan documents (reference only)
 ├── Makefile                # All common commands
 ├── pyproject.toml
-├── .env.example
+├── .env.example            # Copy to .env and fill in credentials
 └── .gitignore
 ```
 

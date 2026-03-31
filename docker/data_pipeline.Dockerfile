@@ -15,12 +15,12 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Python dependencies
-COPY data-pipeline/requirements.txt /tmp/requirements.txt
+COPY data_pipeline/requirements.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
 # Application code
 COPY shared/ /app/shared/
-COPY data-pipeline/ /app/data-pipeline/
+COPY data_pipeline/ /app/data_pipeline/
 
 WORKDIR /app
 ENV PYTHONPATH=/app
