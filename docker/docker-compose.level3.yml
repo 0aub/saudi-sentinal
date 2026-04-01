@@ -3,8 +3,6 @@
 # Inherits all Level 0 + Level 2 services.
 # Verbatim from plan doc (docker-compose.level3.yml).
 
-version: '3.8'
-
 services:
   # --- Inherits all Level 0 + Level 2 services ---
   # Run: docker compose -f docker-compose.level0.yml -f docker-compose.level2.yml \

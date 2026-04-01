@@ -3,8 +3,6 @@
 # Inherits Level 0 services (postgres, minio, redis).
 # Verbatim from plan doc (docker-compose.level2.yml).
 
-version: '3.8'
-
 services:
   # --- Inherit Level 0 services ---
   # Run: docker compose -f docker-compose.level0.yml -f docker-compose.level2.yml up -d

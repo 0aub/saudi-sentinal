@@ -2,8 +2,6 @@
 # Level 0 infrastructure: PostgreSQL+PostGIS, MinIO, Redis, Tile API
 # Verbatim from plan doc (docker-compose.level0.yml).
 
-version: '3.8'
-
 services:
   postgres:
     image: postgis/postgis:16-3.4

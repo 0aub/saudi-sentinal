@@ -11,8 +11,6 @@
 #   docker compose -f docker-compose.level0.yml -f docker-compose.level2.yml up -d
 #   docker compose -f docker-compose.level0.yml -f docker-compose.level2.yml -f docker-compose.level3.yml up -d
 
-version: '3.8'
-
 include:
   - docker-compose.level0.yml
   - docker-compose.level2.yml
