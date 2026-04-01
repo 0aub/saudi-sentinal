@@ -6,8 +6,13 @@
 .PHONY: help level0-up level0-down level2-up level2-down level3-up level3-down \
         all-up all-down seed-aois notebooks test lint clean
 
-ENV_FILE := .env
-DC_LEVEL0 := docker compose -f docker/docker-compose.level0.yml --env-file $(ENV_FILE)
+PROJECT    := saudi-sentinel
+ENV_FILE   := .env
+DC         := docker compose -p $(PROJECT) --env-file $(ENV_FILE)
+DC_LEVEL0  := $(DC) -f docker/docker-compose.level0.yml
+DC_LEVEL2  := $(DC) -f docker/docker-compose.level0.yml -f docker/docker-compose.level2.yml
+DC_LEVEL3  := $(DC) -f docker/docker-compose.level0.yml -f docker/docker-compose.level2.yml -f docker/docker-compose.level3.yml
+DC_ALL     := $(DC) -f docker/docker-compose.yml
 
 # Guard: abort early if .env doesn't exist
 check-env:
@@ -43,7 +48,7 @@ level0-up: check-env
 	@echo ""
 
 level0-down:
-	docker compose -f docker/docker-compose.level0.yml down
+	$(DC_LEVEL0) down
 
 seed-aois: check-env
 	$(DC_LEVEL0) exec tile-api python /app/data_pipeline/seed_aois.py --config /app/data_pipeline/config/aois.yaml
@@ -52,10 +57,7 @@ seed-aois: check-env
 
 level2-up: check-env
 	@echo "Starting Level 2 (Airflow, MLflow, Model Server, Prometheus, Grafana)..."
-	docker compose \
-		-f docker/docker-compose.level0.yml \
-		-f docker/docker-compose.level2.yml \
-		--env-file $(ENV_FILE) up -d
+	$(DC_LEVEL2) up -d
 	@echo ""
 	@echo "  Airflow:      http://localhost:8080  (user: airflow / pass: airflow)"
 	@echo "  MLflow:       http://localhost:5000"
@@ -64,37 +66,28 @@ level2-up: check-env
 	@echo ""
 
 level2-down:
-	docker compose \
-		-f docker/docker-compose.level0.yml \
-		-f docker/docker-compose.level2.yml down
+	$(DC_LEVEL2) down
 
 # --- Level 3 ---
 
 level3-up: check-env
 	@echo "Starting Level 3 (API Gateway, Frontend, Alert Worker)..."
-	docker compose \
-		-f docker/docker-compose.level0.yml \
-		-f docker/docker-compose.level2.yml \
-		-f docker/docker-compose.level3.yml \
-		--env-file $(ENV_FILE) up -d
+	$(DC_LEVEL3) up -d
 	@echo ""
 	@echo "  API Gateway: http://localhost:8300"
 	@echo "  Frontend:    http://localhost:3001"
 	@echo ""
 
 level3-down:
-	docker compose \
-		-f docker/docker-compose.level0.yml \
-		-f docker/docker-compose.level2.yml \
-		-f docker/docker-compose.level3.yml down
+	$(DC_LEVEL3) down
 
 # --- Full stack ---
 
 all-up: check-env
-	docker compose -f docker/docker-compose.yml --env-file $(ENV_FILE) up -d
+	$(DC_ALL) up -d
 
 all-down:
-	docker compose -f docker/docker-compose.yml down
+	$(DC_ALL) down
 
 # --- Notebooks ---
 
