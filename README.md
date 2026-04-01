@@ -88,11 +88,9 @@ docker run hello-world
 git clone https://github.com/0aub/saudi-sentinal.git
 cd saudi-sentinal
 
-# 2. Copy the environment file and fill in your credentials
+# 2. Copy the environment file (defaults work for local dev — no editing needed)
 cp .env.example .env
-# Open .env — fill in everything marked <CHANGE_ME>
-# Minimum required to start: CDSE_CLIENT_ID, CDSE_CLIENT_SECRET, all passwords
-# MAPBOX_TOKEN is only needed for Level 3 (frontend)
+# Optional: add your CDSE credentials for tile ingestion, MAPBOX_TOKEN for Level 3
 
 # 3. Confirm everything loads
 make help
