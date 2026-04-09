@@ -44,7 +44,13 @@ def bbox_from_center_size(
         1 degree latitude  ≈ 111.32 km
         1 degree longitude ≈ 111.32 × cos(lat_radians) km
     """
-    raise NotImplementedError
+    km_per_deg_lat = 111.32
+    km_per_deg_lon = 111.32 * np.cos(np.radians(lat))
+
+    half_lat = (height_km / 2.0) / km_per_deg_lat
+    half_lon = (width_km / 2.0) / km_per_deg_lon
+
+    return (lon - half_lon, lat - half_lat, lon + half_lon, lat + half_lat)
 
 
 def bbox_to_geojson_polygon(
@@ -76,7 +82,13 @@ def wgs84_to_utm(lat: float, lon: float) -> Tuple[float, float, int]:
     Uses pyproj.Transformer for conversion.
     Auto-selects UTM zone from longitude.
     """
-    raise NotImplementedError
+    from pyproj import Transformer
+
+    zone_number = int((lon + 180) / 6) + 1
+    epsg_code = 32600 + zone_number if lat >= 0 else 32700 + zone_number
+    transformer = Transformer.from_crs("EPSG:4326", f"EPSG:{epsg_code}", always_xy=True)
+    easting, northing = transformer.transform(lon, lat)
+    return (easting, northing, epsg_code)
 
 
 def compute_area_km2(geometry_wgs84: dict) -> float:
@@ -86,7 +98,13 @@ def compute_area_km2(geometry_wgs84: dict) -> float:
     Reprojects to appropriate UTM zone for accurate area calculation.
     Uses shapely + pyproj.
     """
-    raise NotImplementedError
+    from pyproj import Geod
+    from shapely.geometry import shape
+
+    geom = shape(geometry_wgs84)
+    geod = Geod(ellps="WGS84")
+    area_m2, _ = geod.geometry_area_perimeter(geom)
+    return abs(area_m2) / 1e6
 
 
 def pixel_to_lonlat(
@@ -104,4 +122,7 @@ def pixel_to_lonlat(
     Returns:
         (lon, lat) in the CRS of the transform (usually EPSG:4326 or UTM)
     """
-    raise NotImplementedError
+    from rasterio.transform import xy
+
+    lon, lat = xy(transform, row, col)
+    return (lon, lat)

@@ -56,10 +56,17 @@ def build_monthly_composites(
         Dict mapping (year, month) → composite array.
         Missing months (no valid chips) are absent from the dict.
     """
-    raise NotImplementedError(
-        "Group chips by month, compute median_composite per group. "
-        "See docs/plans/level-1-notebooks/02-green-riyadh-monitor.md."
-    )
+    from collections import defaultdict
+
+    monthly_groups: dict[tuple[int, int], list[np.ndarray]] = defaultdict(list)
+    for acq_date, chip_array in chip_time_series:
+        if acq_date.year == year:
+            monthly_groups[(year, acq_date.month)].append(chip_array)
+
+    return {
+        key: median_composite(arrays)
+        for key, arrays in monthly_groups.items()
+    }
 
 
 def build_annual_max_composite(
@@ -79,4 +86,16 @@ def build_annual_max_composite(
         Per-pixel maximum array, or None if no valid chips found.
         Used for pivot farm detection (annual max NDVI highlights vegetation peak).
     """
-    raise NotImplementedError
+    filtered = []
+    for acq_date, chip_array in chip_time_series:
+        if acq_date.year != year:
+            continue
+        if months is not None and acq_date.month not in months:
+            continue
+        filtered.append(chip_array)
+
+    if not filtered:
+        return None
+
+    stack = np.stack(filtered, axis=0)
+    return np.nanmax(stack, axis=0).astype(np.float32)

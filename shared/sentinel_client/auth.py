@@ -71,17 +71,59 @@ class CDSEAuth:
         - Parse response: access_token, refresh_token, expires_in
         - Store as CDSEToken with expires_at = now + expires_in
         """
-        raise NotImplementedError(
-            "Implement OAuth2 client credentials flow. "
-            "See docs/plans/LEVEL-0-DATA-PIPELINE.md — Setup Steps step 1."
+        import httpx
+
+        response = httpx.post(
+            self.TOKEN_URL,
+            data={
+                "grant_type": "client_credentials",
+                "client_id": self.client_id,
+                "client_secret": self.client_secret,
+            },
         )
+        response.raise_for_status()
+        data = response.json()
+
+        self._token = CDSEToken(
+            access_token=data["access_token"],
+            refresh_token=data.get("refresh_token", ""),
+            expires_at=time.time() + data["expires_in"],
+            token_type=data.get("token_type", "Bearer"),
+        )
+        return self._token
 
     def refresh_token(self) -> CDSEToken:
         """
         Refresh access token using the refresh_token grant.
         Falls back to full re-authentication if refresh_token is also expired.
         """
-        raise NotImplementedError
+        import httpx
+
+        if not self._token or not self._token.refresh_token:
+            return self.authenticate()
+
+        try:
+            response = httpx.post(
+                self.TOKEN_URL,
+                data={
+                    "grant_type": "refresh_token",
+                    "refresh_token": self._token.refresh_token,
+                    "client_id": self.client_id,
+                    "client_secret": self.client_secret,
+                },
+            )
+            response.raise_for_status()
+            data = response.json()
+
+            self._token = CDSEToken(
+                access_token=data["access_token"],
+                refresh_token=data.get("refresh_token", self._token.refresh_token),
+                expires_at=time.time() + data["expires_in"],
+                token_type=data.get("token_type", "Bearer"),
+            )
+            return self._token
+        except httpx.HTTPStatusError:
+            return self.authenticate()
 
     def get_auth_headers(self) -> dict:
         """

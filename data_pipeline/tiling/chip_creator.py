@@ -1,9 +1,9 @@
 # Implementation guide: see docs/plans/LEVEL-0-DATA-PIPELINE.md — "Chip Specification" section
 """
-256×256 chip slicing logic for converting full-AOI rasters into ML-ready tiles.
+256x256 chip slicing logic for converting full-AOI rasters into ML-ready tiles.
 
 Chip specification:
-    Size:       256×256 pixels (2.56 km × 2.56 km at 10m resolution)
+    Size:       256x256 pixels (2.56 km x 2.56 km at 10m resolution)
     Sentinel-2: 6 bands (B02,B03,B04,B08,B11,B12), float32 [0.0, 1.0]
     Sentinel-1: 2 bands (VV, VH), float32 dB backscatter
     Format:     GeoTIFF with CRS and affine transform metadata
@@ -18,15 +18,19 @@ See: docs/plans/LEVEL-0-DATA-PIPELINE.md — "Chip Naming Convention" and "Chip 
 
 from __future__ import annotations
 
+import math
 from pathlib import Path
 from typing import Generator, Tuple
 
 import numpy as np
+import rasterio
+from rasterio.transform import Affine
+from rasterio.windows import Window
 
 
 class ChipCreator:
     """
-    Slices a full-AOI raster array into non-overlapping 256×256 chips.
+    Slices a full-AOI raster array into non-overlapping 256x256 chips.
 
     Implementation guide: docs/plans/LEVEL-0-DATA-PIPELINE.md — "Chip Specification"
     """
@@ -60,11 +64,31 @@ class ChipCreator:
           are not evenly divisible by chip_size.
         - Chips that are >90% NaN (cloud or nodata) should be filtered by the caller.
         """
-        raise NotImplementedError(
-            "Implement sliding window slicing. "
-            "Use rasterio.windows.Window for correct affine sub-transforms. "
-            "See docs/plans/LEVEL-0-DATA-PIPELINE.md."
-        )
+        num_bands, height, width = data.shape
+        cs = self.chip_size
+
+        n_rows = math.ceil(height / cs)
+        n_cols = math.ceil(width / cs)
+
+        for row_idx in range(n_rows):
+            for col_idx in range(n_cols):
+                row_off = row_idx * cs
+                col_off = col_idx * cs
+
+                # Determine the actual window size (may be smaller at edges)
+                win_h = min(cs, height - row_off)
+                win_w = min(cs, width - col_off)
+
+                window = Window(col_off=col_off, row_off=row_off, width=win_w, height=win_h)
+
+                # Extract chip data from the source array
+                chip_data = np.full((num_bands, cs, cs), np.nan, dtype=np.float32)
+                chip_data[:, :win_h, :win_w] = data[:, row_off:row_off + win_h, col_off:col_off + win_w]
+
+                # Compute the affine transform for this chip
+                chip_transform = rasterio.windows.transform(window, transform)
+
+                yield chip_data, chip_transform, row_idx, col_idx
 
     def save_chip_geotiff(
         self,
@@ -81,10 +105,25 @@ class ChipCreator:
         - Set compression='lzw' for smaller file sizes
         - Write transform and CRS for proper georeferencing
         """
-        raise NotImplementedError(
-            "Implement GeoTIFF writer using rasterio. "
-            "See docs/plans/LEVEL-0-DATA-PIPELINE.md."
-        )
+        output_path = Path(output_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        num_bands, height, width = chip_data.shape
+
+        with rasterio.open(
+            str(output_path),
+            "w",
+            driver="GTiff",
+            height=height,
+            width=width,
+            count=num_bands,
+            dtype="float32",
+            crs=crs,
+            transform=chip_transform,
+            compress="lzw",
+            nodata=np.nan,
+        ) as dst:
+            dst.write(chip_data.astype(np.float32))
 
     @staticmethod
     def chip_id_from_parts(
