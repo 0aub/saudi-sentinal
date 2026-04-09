@@ -21,9 +21,12 @@ See: docs/plans/LEVEL-2-MLOPS.md — "Unified Serving Architecture"
 
 from __future__ import annotations
 
+import logging
 from typing import Any, Dict, Optional
 
 from fastapi import FastAPI, HTTPException
+
+logger = logging.getLogger(__name__)
 from pydantic import BaseModel
 
 app = FastAPI(
@@ -71,9 +74,9 @@ async def load_models():
 
     See: docs/plans/LEVEL-2-MLOPS.md — "FastAPI Model Serving → load_models"
     """
-    raise NotImplementedError(
-        "Implement MLflow model loading. See docs/plans/LEVEL-2-MLOPS.md."
-    )
+    # TODO: Implement MLflow model loading. See docs/plans/LEVEL-2-MLOPS.md.
+    logger.info("Model loading not yet implemented — no models loaded.")
+    logger.info("Deploy ONNX models to MLflow and restart to enable inference.")
 
 
 @app.post("/predict/{project_name}")

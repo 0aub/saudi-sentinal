@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 from datetime import datetime, timedelta
 from typing import Any, Dict, List
 
@@ -42,10 +43,9 @@ class AlertWorker:
         redis_url: str | None = None,
     ) -> None:
         self.poll_interval = poll_interval_seconds
-        raise NotImplementedError(
-            "Initialize DB connection and Redis client. "
-            "See docs/plans/LEVEL-3-SYSTEM.md — AlertWorker."
-        )
+        self.database_url = database_url or os.environ.get("DATABASE_URL")
+        self.redis_url = redis_url or os.environ.get("REDIS_URL")
+        logger.info("AlertWorker initialized (db=%s, redis=%s)", self.database_url, self.redis_url)
 
     async def run(self) -> None:
         """Main loop — runs indefinitely."""
